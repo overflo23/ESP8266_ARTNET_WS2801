@@ -53,7 +53,7 @@ Just make sure you don't violate the licenses of the libraries it uses.
 
 
 #include "Adafruit_WS2801.h"  // https://github.com/adafruit/Adafruit-WS2801-Library
-#include "SPI.h" // Comment out this line if using Trinket or Gemma
+#include "SPI.h" 
 
 
 
