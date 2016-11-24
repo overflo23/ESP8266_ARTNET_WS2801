@@ -10,16 +10,16 @@ This example may be copied under the terms of the MIT license, see the LICENSE f
 
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
-#include <ArtnetWifi.h>
+#include <ArtnetWifi.h> // https://github.com/rstephan/ArtnetWifi
 
 
 //needed for library
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
-#include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
+#include <WiFiManager.h>          // https://github.com/tzapu/WiFiManager
 
 
-#include <ArduinoJson.h>          //https://github.com/bblanchon/ArduinoJson
+#include <ArduinoJson.h>          // https://github.com/bblanchon/ArduinoJson
 
 
 
@@ -396,6 +396,8 @@ void debugDMX(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* dat
 }
 
 
+unsigned long lastDmxFrame =0;
+
 void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* data)
 {
 
@@ -403,21 +405,25 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* d
   
   
   
+
   
   
   
   
   
-  
-  
-  
-  
-  // red led on
-  digitalWrite(LEDPIN, LOW);
+
 
 
   // not our universe? good bye!
   if (universe != artnetUniverse)  return;
+
+
+   // set timestamp
+  lastDmxFrame=millis();
+  
+  // red led on
+  digitalWrite(LEDPIN, LOW);  
+
 
 
   int idx=0;
@@ -444,7 +450,7 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* d
   }
   
   
-  Serial.println("leds.show()");
+  //Serial.println("leds.show()");
   leds.show();
   
   
@@ -575,6 +581,22 @@ void setupFS()
 }
 
 
+
+
+bool breakable_delay(int wait)
+{ 
+     for(int i=0;i<wait;i++)
+     {
+      artnet.read();
+      if(lastDmxFrame) return true;
+      // this should be 1000 microsenonds-as long as artnet.read() + the compare statement takes .. i guess 500 is too low a number..
+      delayMicroseconds(500);
+     }
+      return false; 
+}
+
+
+
 void setup()
 {
   
@@ -599,18 +621,29 @@ void setup()
 
   Serial.println("Leds set to default states");
 
-  // on boards led are wired for LOW to turn them on and HIGH turning them off..
+  //on boards led are wired for LOW to turn them on and HIGH turning them off..
+
   
+  //should be in statusled() function
+  /*
   // red led ON
   digitalWrite(LEDPIN, HIGH);
-  delay(200);
+  delay(500);
   // red led ON
   digitalWrite(LEDPIN, LOW);
   delay(500);
   digitalWrite(LEDPIN, HIGH);
+*/
+
 
   // display the MAC on Serial
   printMac();
+
+  Serial.println("leds_setup() called ");
+  leds_setup();
+  leds_rainbow(20);
+
+
 
   
   Serial.print("System Name: ");
@@ -630,8 +663,6 @@ void setup()
 
  delay(10000);
 
-  Serial.println("leds_setup() called ");
-   leds_setup();
 
 
 
@@ -672,14 +703,22 @@ void setup()
 // life in loops.
 void loop()
 {
+
+  if(lastDmxFrame >0)
+  { 
+       if((millis()-lastDmxFrame)>1000*60*5)  lastDmxFrame=0;   
+  }
+  else
+  {
+   // dmx did happen before.. if the last time is older 5 minutes we reset the lastDmxFrame Counter. That turns on the usual rainbow business.
+    leds_rainbowCycle(20); 
+    
+  }
   // we call the read function inside the loop
   artnet.read();
 }
 
 
 
-
-
-
-// ane they lived happily ever after
-// the end.}
+// and they lived happily ever after
+// the end. 
