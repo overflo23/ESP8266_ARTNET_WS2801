@@ -132,7 +132,7 @@ bool shouldSaveConfig = false;
 #define WL_MAC_ADDR_LENGTH 6
 
 
-//creates the string that shows if the device goes into accces pint mode
+//creates the string that shows if the device goes into accces point mode
 String getUniqueSystemName()
 {
   uint8_t mac[WL_MAC_ADDR_LENGTH];
@@ -705,17 +705,7 @@ void setup()
 
   // this will be called for each packet received
   artnet.setArtDmxCallback(onDmxFrame);
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
   
 }
 
@@ -727,8 +717,11 @@ void setup()
 void loop()
 {
 
+  
+  //lastDmxFrame is set in onDmxFrame to millis()
   if(lastDmxFrame >0)
   { 
+       //lastDmxFrame reset to 0  .. rainbow time!
        if((millis()-lastDmxFrame)>1000*60*5)  lastDmxFrame=0;   
   }
   else
@@ -737,6 +730,9 @@ void loop()
     leds_rainbowCycle(20); 
     
   }
+  
+  
+  
   // we call the read function inside the loop
   artnet.read();
 }
